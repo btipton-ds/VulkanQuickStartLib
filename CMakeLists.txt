@@ -36,6 +36,7 @@ else(UNIX)
     set(GLFW_LIB_NAME "glfw3")
 endif(UNIX)
 
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BUILD_TYPE}")
 set(CONFIG "x64-${CMAKE_BUILD_TYPE}")
 message(STATUS "${CONFIG}")
 
