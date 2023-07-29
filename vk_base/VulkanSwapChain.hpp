@@ -306,7 +306,12 @@ public:
 		else
 		{
 			// If the surface size is defined, the swap chain size must match
-			swapchainExtent = surfCaps.currentExtent;
+//			swapchainExtent = surfCaps.currentExtent;
+
+			swapchainExtent.width = surfCaps.currentExtent.width;
+			swapchainExtent.height = surfCaps.currentExtent.height;
+			swapchainExtent.depth = 0;
+
 			*width = surfCaps.currentExtent.width;
 			*height = surfCaps.currentExtent.height;
 		}
