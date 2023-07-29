@@ -1,0 +1,9 @@
+/Debug/
+/CMakeFiles/
+.cproject
+.project
+.settings
+CMakeCache.txt
+Makefile
+*.so
+*.cmake
