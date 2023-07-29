@@ -1,0 +1,13 @@
+doxygen/doxygen_new_line_after_brief=true
+doxygen/doxygen_use_brief_tag=false
+doxygen/doxygen_use_javadoc_tags=true
+doxygen/doxygen_use_pre_tag=false
+doxygen/doxygen_use_structural_commands=false
+eclipse.preferences.version=1
+environment/project/cdt.managedbuild.config.gnu.so.debug.427267360/append=true
+environment/project/cdt.managedbuild.config.gnu.so.debug.427267360/appendContributed=true
+environment/project/cdt.managedbuild.config.gnu.so.release.389607259/VK_USE_PLATFORM_WAYLAND_KHR/delimiter=\:
+environment/project/cdt.managedbuild.config.gnu.so.release.389607259/VK_USE_PLATFORM_WAYLAND_KHR/operation=append
+environment/project/cdt.managedbuild.config.gnu.so.release.389607259/VK_USE_PLATFORM_WAYLAND_KHR/value=
+environment/project/cdt.managedbuild.config.gnu.so.release.389607259/append=true
+environment/project/cdt.managedbuild.config.gnu.so.release.389607259/appendContributed=true
