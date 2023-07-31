@@ -96,6 +96,7 @@ target_compile_features(VulkanQuickStartLib PRIVATE cxx_std_17)
 target_link_libraries("VulkanQuickStartLib" 
 PUBLIC Vulkan::Vulkan
 PRIVATE triMesh
+PRIVATE stlReader
 PRIVATE freetype
 PRIVATE ${GLFW_LIB_NAME}
 )
