@@ -7,6 +7,7 @@ PROJECT(VulkanQuickStartLib)
 
 find_package (Vulkan)
 
+message(STATUS "Vulkan:include: ${Vulkan_INCLUDE_DIRS}")
 include_directories(
 	"include"
 	"vk_base"

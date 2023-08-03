@@ -38,6 +38,7 @@ This file is part of the VulkanQuickStart Project.
 #include <set>
 #include <memory>
 
+#include <vulkan/vulkan_core.h>
 #include <vk_forwardDeclarations.h>
 
 namespace VK {
