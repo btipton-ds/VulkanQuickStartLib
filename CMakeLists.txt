@@ -7,32 +7,50 @@ PROJECT(VulkanQuickStartLib)
 
 find_package (Vulkan)
 
-include_directories(
-	"include"
-	"vk_base"
-	"/usr/include/"
-	"/usr/include/freetype2/"
-	"../ThirdParty/glm-0.9.9.5/glm"
-	"../ThirdParty/glfw-3.3.2/include"
-	"../ThirdParty/tinyobjloader"
-	"/usr/local/include/eigen3/"
-	"../ThirdParty/stb"
-	"${Vulkan_INCLUDE_DIRS}"
-	"../triMesh/triMesh/include"
-	"../triMesh/stlReader/include"
-)
-
 if (UNIX)
+    include_directories(
+	    "include"
+	    "vk_base"
+	    "/usr/include/"
+	    "/usr/include/freetype2/"
+	    "../ThirdParty/glm-0.9.9.5/glm"
+	    "../ThirdParty/glfw-3.3.2/include"
+	    "../ThirdParty/tinyobjloader"
+	    "/usr/local/include/eigen3/"
+	    "../ThirdParty/stb"
+	    "${Vulkan_INCLUDE_DIRS}"
+	    "../triMesh/triMesh/include"
+	    "../triMesh/stlReader/include"
+    )
+
     list(APPEND CMAKE_CXX_FLAGS "-pthread -fPIC")
     set(GLSL_VALIDATOR "glslangValidator")
     add_definitions(-DGLFW_EXPOSE_NATIVE_X11 -D_GCC)
     set(GLFW_LIB_DIR "/usr/lib/x86_64-linux-gnu/")
     set(GLFW_LIB_NAME "glfw")
 else(UNIX)
+	#turn export declaration on for windows
+	add_compile_definitions(VQS_EXPORT_DEF)
+
+    include_directories(
+	    "include"
+	    "vk_base"
+	    "/usr/include/"
+	    "../ThirdParty/freetype-2.10.2/include"
+	    "../ThirdParty/glm-0.9.9.5/glm"
+	    "../ThirdParty/glfw-3.3.2/include"
+	    "../ThirdParty/tinyobjloader"
+	    "/usr/local/include/eigen3/"
+	    "../ThirdParty/stb"
+	    "${Vulkan_INCLUDE_DIRS}"
+	    "../triMesh/triMesh/include"
+	    "../triMesh/stlReader/include"
+    )
+
     set(GLSL_VALIDATOR "/VulkanSDK/1.2.170.0/Bin32/glslangValidator.exe")
-    add_definitions(-DGLFW_EXPOSE_NATIVE_WIN32)
-    set(GLFW_LIB_DIR "../../ThirdParty/glfw-3.3.2/lib-vc2019")
-    set(FREE_TYPE_LIB_DER "../../ThirdParty/freetype-2.10.2/x64/Release Static")
+    add_definitions(-DGLFW_EXPOSE_NATIVE_WIN32 -D_WIN32)
+    set(GLFW_LIB_DIR "../ThirdParty/glfw-3.3.2/lib-vc2019")
+    set(FREE_TYPE_LIB_DER "../ThirdParty/freetype-2.10.2/x64/Release Static")
     set(GLFW_LIB_NAME "glfw3")
 endif(UNIX)
 
@@ -49,14 +67,19 @@ if(${CMAKE_BUILD_TYPE} MATCHES "Release")
 add_compile_definitions(VQS_RELEASE_BUILD)
 endif()
 
+if (UNIX)
 link_directories (
 "${GLFW_LIB_DIR}"
 "${FREE_TYPE_LIB_DER}"
 "../triMesh/${CMAKE_BUILD_TYPE}/"
 )
-
-#turn export declaration on for windows
-add_compile_definitions(VQS_EXPORT_DEF)
+else(UNIX)
+link_directories (
+"${GLFW_LIB_DIR}"
+"${FREE_TYPE_LIB_DER}"
+"../triMesh/${CMAKE_BUILD_TYPE}/${CMAKE_BUILD_TYPE}/"
+)
+endif(UNIX)
 
 add_library (
 VulkanQuickStartLib SHARED
@@ -96,15 +119,41 @@ target_compile_features(VulkanQuickStartLib PRIVATE cxx_std_17)
 target_link_libraries("VulkanQuickStartLib" 
 PUBLIC Vulkan::Vulkan
 PRIVATE triMesh
+PRIVATE stlReader
 PRIVATE freetype
 PRIVATE ${GLFW_LIB_NAME}
 )
 
 if (NOT UNIX)
+if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
 add_custom_command(TARGET VulkanQuickStartLib POST_BUILD        # Adds a post-build event to MyTest
+
     COMMAND ${CMAKE_COMMAND} -E copy_if_different  # which executes "cmake - E copy_if_different..."
-        "${PROJECT_BINARY_DIR}/VulkanQuickStartLib/VulkanQuickStartLib.dll"      # <--this is in-file
-        "${PROJECT_BINARY_DIR}/VulkanQuickStartExe/")                 # <--this is out-file path
+        "${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/VulkanQuickStartLib.dll"      # <--this is in-file
+        "${PROJECT_BINARY_DIR}/"                 # <--this is out-file path
+
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different  # which executes "cmake - E copy_if_different..."
+        "${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/VulkanQuickStartLib.dll.manifest"      # <--this is in-file
+        "${PROJECT_BINARY_DIR}/"                  # <--this is out-file path
+
+)
+else(${CMAKE_BUILD_TYPE} STREQUAL "Release")
+add_custom_command(TARGET VulkanQuickStartLib POST_BUILD        # Adds a post-build event to MyTest
+
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different  # which executes "cmake - E copy_if_different..."
+        "${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/VulkanQuickStartLib.dll"      # <--this is in-file
+        "${PROJECT_BINARY_DIR}/"                 # <--this is out-file path
+
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different  # which executes "cmake - E copy_if_different..."
+        "${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/VulkanQuickStartLib.ilk"      # <--this is in-file
+        "${PROJECT_BINARY_DIR}/"                  # <--this is out-file path
+
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different  # which executes "cmake - E copy_if_different..."
+        "${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/VulkanQuickStartLib.pdb"      # <--this is in-file
+        "${PROJECT_BINARY_DIR}/"                  # <--this is out-file path
+
+)
+endif(${CMAKE_BUILD_TYPE} STREQUAL "Release")
 endif(NOT UNIX)
 
 

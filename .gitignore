@@ -1,6 +1,8 @@
 /Debug/
 /Release/
 /CMakeFiles/
+/out/
+/.vs/
 CMakeCache.txt
 Makefile
 *.so
