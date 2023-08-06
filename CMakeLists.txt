@@ -64,19 +64,11 @@ if(${CMAKE_BUILD_TYPE} MATCHES "Release")
 add_compile_definitions(VQS_RELEASE_BUILD)
 endif()
 
-if (UNIX)
 link_directories (
 "${GLFW_LIB_DIR}"
 "${FREE_TYPE_LIB_DER}"
 "../triMesh/${CMAKE_BUILD_TYPE}/"
 )
-else(UNIX)
-link_directories (
-"${GLFW_LIB_DIR}"
-"${FREE_TYPE_LIB_DER}"
-"../triMesh/${CMAKE_BUILD_TYPE}/${CMAKE_BUILD_TYPE}/"
-)
-endif(UNIX)
 
 add_library (
 VulkanQuickStartLib SHARED
