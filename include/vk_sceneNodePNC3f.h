@@ -70,8 +70,15 @@ namespace VK {
 		}
 
 	private:
+#ifdef _WIN32
+#pragma warning(suppress: 4251)
+		glm::mat4 _modelXForm;
+#pragma warning(suppress : 4251)
+		TransformFuncPtr _modelXFormFunc;
+#else
 		glm::mat4 _modelXForm;
 		TransformFuncPtr _modelXFormFunc;
+#endif // _WIN32
 	};
 	using SceneNodePNC3fPtr = std::shared_ptr<SceneNodePNC3f>;
 	using SceneNodePNC3fConstPtr = std::shared_ptr<const SceneNodePNC3f>;
