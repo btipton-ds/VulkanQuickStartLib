@@ -125,7 +125,7 @@ vector<char> ShaderPool::readFile(const std::string& filename) {
 	std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
 	if (!file.is_open()) {
-		THROW("failed to open file!");
+		THROW("failed to open file(" + filename + ")!");
 	}
 
 	size_t fileSize = (size_t)file.tellg();
