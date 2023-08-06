@@ -203,7 +203,7 @@ namespace VK::UI {
 		if (err == FT_Err_Unknown_File_Format)
 			THROW("Unknown font format.")
 		else if (err)
-			THROW("Failed to read font file.");
+			THROW("Failed to read font file(" + fontFilename + ").");
 
 		unsigned int dpi = getApp()->getUiWindow()->getPixelDPI();
 
@@ -236,7 +236,7 @@ namespace VK::UI {
 
 	void Button::init() {
 #ifdef _WIN32
-        _fontPath = "/Windows/Fonts/";
+        _fontPath = "C:/Windows/Fonts/";
         _fontName = "arial.ttf";
 #else
                 _fontPath = "/usr/share/fonts/opentype/noto/"; //"/Windows/Fonts/";
