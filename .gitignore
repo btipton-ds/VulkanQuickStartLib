@@ -1,5 +1,8 @@
 /Debug/
 /Release/
+*.vcxproj
+*.filters
+*.sln
 /CMakeFiles/
 /out/
 /.vs/

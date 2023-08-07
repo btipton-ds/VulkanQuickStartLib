@@ -44,7 +44,7 @@ else(UNIX)
 	    "../ThirdParty/glm-0.9.9.5/glm"
 	    "../ThirdParty/glfw-3.3.2/include"
 	    "../ThirdParty/tinyobjloader"
-	    "/usr/local/include/eigen3/"
+	    "../ThirdParty/eigen"
 	    "../ThirdParty/stb"
 	    "${Vulkan_INCLUDE_DIRS}"
 	    "../triMesh/triMesh/include"
@@ -112,38 +112,5 @@ PRIVATE stlReader
 PRIVATE freetype
 PRIVATE ${GLFW_LIB_NAME}
 )
-
-if (NOT UNIX)
-if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
-add_custom_command(TARGET VulkanQuickStartLib POST_BUILD        # Adds a post-build event to MyTest
-
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different  # which executes "cmake - E copy_if_different..."
-        "${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/VulkanQuickStartLib.dll"      # <--this is in-file
-        "${PROJECT_BINARY_DIR}/"                 # <--this is out-file path
-
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different  # which executes "cmake - E copy_if_different..."
-        "${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/VulkanQuickStartLib.dll.manifest"      # <--this is in-file
-        "${PROJECT_BINARY_DIR}/"                  # <--this is out-file path
-
-)
-else(${CMAKE_BUILD_TYPE} STREQUAL "Release")
-add_custom_command(TARGET VulkanQuickStartLib POST_BUILD        # Adds a post-build event to MyTest
-
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different  # which executes "cmake - E copy_if_different..."
-        "${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/VulkanQuickStartLib.dll"      # <--this is in-file
-        "${PROJECT_BINARY_DIR}/"                 # <--this is out-file path
-
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different  # which executes "cmake - E copy_if_different..."
-        "${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/VulkanQuickStartLib.ilk"      # <--this is in-file
-        "${PROJECT_BINARY_DIR}/"                  # <--this is out-file path
-
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different  # which executes "cmake - E copy_if_different..."
-        "${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/VulkanQuickStartLib.pdb"      # <--this is in-file
-        "${PROJECT_BINARY_DIR}/"                  # <--this is out-file path
-
-)
-endif(${CMAKE_BUILD_TYPE} STREQUAL "Release")
-endif(NOT UNIX)
-
 
 # TODO: Add tests and install targets if needed.
