@@ -46,7 +46,7 @@ PipelineUi::PipelineUi(const PipelineUboGroupBasePtr& plGroup)
 
 	auto& shaders = plGroup->getApp()->getDeviceContext()->getShaderPool();
 	if (!shaders.getShader(getShaderId()))
-		shaders.addShader(getShaderId(), { "shaders/shader_ui_vert.spv", "shaders/shader_ui_frag.spv" });
+		shaders.addShader(getShaderId(), { "shaders_spv/shader_ui_vert.spv", "shaders_spv/shader_ui_frag.spv" });
 }
 
 void PipelineUi::updateSceneNodeUbo(const SceneNodePtr& sceneNode, UniformBufferObjectUi& ubo) const {

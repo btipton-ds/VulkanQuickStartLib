@@ -282,15 +282,15 @@ namespace VK
 
 	void createPipelines() {
 
-		vector<string> sampler3DFilenames = { "shaders/shader_depth_vert.spv", "shaders/shader_depth_frag.spv" };
+		vector<string> sampler3DFilenames = { "shaders_spv/shader_depth_vert.spv", "shaders_spv/shader_depth_frag.spv" };
 		pipeline3DWSampler.add(gApp->addPipelineWithSource<PipelinePNCT3f>("obj_shader", sampler3DFilenames));
 		pipeline3DWSampler.add(offscreen->getPipelines()->addPipelineWithSource<PipelinePNCT3f>("obj_shader", offscreen->getRect(), sampler3DFilenames));
 
-		vector<string> shaded3DFilenames = { "shaders/shader_vert.spv", "shaders/shader_frag.spv" };
+		vector<string> shaded3DFilenames = { "shaders_spv/shader_vert.spv", "shaders_spv/shader_frag.spv" };
 		pipeline3DShaded.add(gApp->addPipelineWithSource<PipelinePNC3f>("stl_shaded", shaded3DFilenames));
 		pipeline3DShaded.add(offscreen->getPipelines()->addPipelineWithSource<PipelinePNC3f>("stl_shaded", offscreen->getRect(), shaded3DFilenames));
 
-		vector<string> wf3DFilenames = { "shaders/shader_vert.spv", "shaders/shader_wireframe_frag.spv" };
+		vector<string> wf3DFilenames = { "shaders_spv/shader_vert.spv", "shaders_spv/shader_wireframe_frag.spv" };
 		pipeline3DWireframe.add(gApp->addPipelineWithSource<PipelinePNC3f>("stl_wireframe", wf3DFilenames));
 		pipeline3DWireframe.add(offscreen->getPipelines()->addPipelineWithSource<PipelinePNC3f>("stl_wireframe", offscreen->getRect(), wf3DFilenames));
 
