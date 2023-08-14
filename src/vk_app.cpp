@@ -27,6 +27,10 @@ This file is part of the VulkanQuickStart Project.
 
 */
 
+#if defined(_WIN32) && !defined(VK_USE_PLATFORM_WIN32_KHR)
+#define VK_USE_PLATFORM_WIN32_KHR
+#endif
+
 #include <vk_defines.h>
 
 #include <iostream>
@@ -70,6 +74,8 @@ This file is part of the VulkanQuickStart Project.
 #include <vk_postDrawTask.h>
 #include <vk_app.h>
 
+#include <vulkan/vulkan_win32.h>
+
 using namespace std;
 using namespace VK;
 
@@ -80,7 +86,7 @@ const std::vector<const char*> validationLayers = {
 };
 
 const std::vector<const char*> deviceExtensions = {
-	VK_KHR_SWAPCHAIN_EXTENSION_NAME
+	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 };
 
 #define FORCE_VALIDATION 0
@@ -101,17 +107,18 @@ VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMes
 	}
 }
 
-VulkanAppPtr VulkanApp::create(const VkRect2D& rect) {
-	VulkanApp* ptr = new VulkanApp(rect);
+VulkanAppPtr VulkanApp::create(const VkRect2D& rect, void* hWind) {
+	VulkanApp* ptr = new VulkanApp(rect, hWind);
 	VulkanAppPtr result = shared_ptr<VulkanApp>(ptr);
 	result->init();
 	return result;
 }
 
-VulkanApp::VulkanApp(const VkRect2D& rect)
+VulkanApp::VulkanApp(const VkRect2D& rect, void* hWind)
 	: _frameRect(rect)
 	, _deviceContext(make_shared<DeviceContext>(MAX_FRAMES_IN_FLIGHT))
 	, _swapChain(_deviceContext)
+	, m_hWind(hWind)
 {
 	_modelToWorld = glm::identity<glm::mat4>();
 
@@ -178,18 +185,23 @@ void VulkanApp::run() {
 }
 
 void VulkanApp::initWindow() {
-	glfwInit();
+	if (!m_hWind) {
+		glfwInit();
 
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-	_window = glfwCreateWindow(_frameRect.extent.width, _frameRect.extent.height, "Vulkan", nullptr, nullptr);
-	glfwSetWindowUserPointer(_window, this);
-	glfwSetFramebufferSizeCallback(_window, framebufferResizeCallback);
+		_window = glfwCreateWindow(_frameRect.extent.width, _frameRect.extent.height, "Vulkan", nullptr, nullptr);
+		glfwSetWindowUserPointer(_window, this);
+		glfwSetFramebufferSizeCallback(_window, framebufferResizeCallback);
 
 #ifdef _WIN32
-	auto hwnd = glfwGetWin32Window(_window);
-	_windowDpi = (unsigned int)GetDpiForWindow(hwnd);
+		auto hwnd = glfwGetWin32Window(_window);
+		_windowDpi = (unsigned int)GetDpiForWindow(hwnd);
 #endif // _WIN32
+	} else {
+		_window = nullptr;
+	}
+
 
 }
 
@@ -203,7 +215,7 @@ void VulkanApp::framebufferResizeCallback(GLFWwindow* window, int width, int hei
 void VulkanApp::initVulkan() {
 	createInstance();
 	setupDebugMessenger();
-	createSurface();
+	createSurface(m_hWind);
 	pickPhysicalDevice();
 	createLogicalDevice();
 	createSwapChain();
@@ -367,9 +379,14 @@ void VulkanApp::createInstance() {
 	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	createInfo.pApplicationInfo = &appInfo;
 
-	auto extensions = getRequiredExtensions();
-	createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-	createInfo.ppEnabledExtensionNames = extensions.data();
+	// This is required so the strings are allocated on the heap, inside std::string, instead of the stack.
+	vector<string> extensions = getRequiredExtensions();
+	vector<char const*> extensionsCStr;
+	for (size_t i = 0; i < extensions.size(); i++) {
+		extensionsCStr.push_back(extensions[i].c_str());
+	}
+	createInfo.enabledExtensionCount = static_cast<uint32_t>(extensionsCStr.size());
+	createInfo.ppEnabledExtensionNames = extensionsCStr.data();
 
 	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
 	if (enableValidationLayers) {
@@ -409,7 +426,22 @@ void VulkanApp::setupDebugMessenger() {
 	}
 }
 
-void VulkanApp::createSurface() {
+void VulkanApp::createSurface(void* hWind) {
+	if (hWind) {
+#ifdef _WIN32
+		VkWin32SurfaceCreateInfoKHR createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+		createInfo.hwnd = (HWND)hWind;
+		createInfo.hinstance = GetModuleHandle(nullptr);
+
+		auto result = vkCreateWin32SurfaceKHR(_instance, &createInfo, nullptr, &_surface);
+
+		if (result == VK_SUCCESS) {
+			return;
+		}
+#endif
+	}
+
 	if (glfwCreateWindowSurface(_instance, _window, nullptr, &_surface) != VK_SUCCESS) {
 		THROW("failed to create window surface!");
 	}
@@ -1253,12 +1285,18 @@ VulkanApp::QueueFamilyIndices VulkanApp::findQueueFamilies(VkPhysicalDevice devi
 	return indices;
 }
 
-std::vector<const char*> VulkanApp::getRequiredExtensions() {
+std::vector<std::string> VulkanApp::getRequiredExtensions() {
 	uint32_t glfwExtensionCount = 0;
-	const char** glfwExtensions;
-	glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+	const char** glfwExtensionsChar;
+	glfwExtensionsChar = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
-	std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+	std::vector<string> extensions;
+	for (uint32_t i = 0; i < glfwExtensionCount; i++)
+		extensions.push_back(glfwExtensionsChar[i]);
+
+#if defined (_WIN32)
+	extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);	
+#endif
 
 	if (enableValidationLayers) {
 		extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);

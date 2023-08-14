@@ -32,12 +32,13 @@ This file is part of the VulkanQuickStart Project.
 #include <vk_exports.h>
 #include <tm_defines.h>
 
+#if 0
 #ifdef _HAS_ITERATOR_DEBUGGING
 #undef _HAS_ITERATOR_DEBUGGING
 #endif
 
 #define _HAS_ITERATOR_DEBUGGING 0
-#define USE_EIGEN_VECTOR3 0
+#endif
 
 #ifdef _GCC
 #define GCC_CLASS class

@@ -78,12 +78,14 @@ namespace VK {
 		};
 		using UpdaterPtr = std::shared_ptr<Updater>;
 
-		static VulkanAppPtr create(const VkRect2D& rect);
+		// If hWind is not null, that window will be used for the VulkanSurface.
+		// Otherwise, a new window is created using glfw
+		static VulkanAppPtr create(const VkRect2D& rect, void* hWind = nullptr);
 
 		void setClearColor(float red, float green, float blue, float alpha = 1.0f);
 
 	protected:
-		VulkanApp(const VkRect2D& rect);
+		VulkanApp(const VkRect2D& rect, void* hWind = nullptr);
 		void init();
 
 	public:
@@ -162,7 +164,7 @@ namespace VK {
 
 		void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 		void setupDebugMessenger();
-		void createSurface();
+		void createSurface(void* hWind);
 		void pickPhysicalDevice();
 
 		void createLogicalDevice();
@@ -202,10 +204,11 @@ namespace VK {
 		bool isDeviceSuitable(VkPhysicalDevice device, VkPhysicalDeviceFeatures& features);
 		bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 		QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
-		std::vector<const char*> getRequiredExtensions();
+		std::vector<std::string> getRequiredExtensions();
 		bool checkValidationLayerSupport();
 
 		GLFWwindow* _window;
+		void* m_hWind;
 		VkRect2D _frameRect;
 		bool _isRunning = true;
 		size_t _runtimeMillis = 0;

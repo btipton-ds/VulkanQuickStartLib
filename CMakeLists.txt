@@ -34,7 +34,11 @@ if (UNIX)
     set(GLFW_LIB_NAME "glfw")
 else(UNIX)
 	#turn export declaration on for windows
-	add_compile_definitions(VQS_EXPORT_DEF)
+	add_compile_definitions(
+		VQS_EXPORT_DEF 
+		VK_PROTOTYPES 
+		NOMINMAX #This prevents min/max macros in windows.h from hiding std::min, std::max and other declarations of min/max
+	)
 
     include_directories(
 	    "include"
