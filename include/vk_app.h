@@ -78,8 +78,10 @@ namespace VK {
 		};
 		using UpdaterPtr = std::shared_ptr<Updater>;
 
+		// The create function forces a call to the init member, after creation is complete
 		// If hWind is not null, that window will be used for the VulkanSurface.
 		// Otherwise, a new window is created using glfw
+		template<class APP>
 		static VulkanAppPtr create(const VkRect2D& rect, void* hWind = nullptr);
 
 		void setClearColor(float red, float green, float blue, float alpha = 1.0f);
@@ -155,7 +157,7 @@ namespace VK {
 		static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 
 		void initWindow();
-		void initVulkan();
+		bool initVulkan();
 		void recreateSwapChain();
 		void mainLoop();
 		void cleanupSwapChain();
@@ -164,7 +166,7 @@ namespace VK {
 
 		void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 		void setupDebugMessenger();
-		void createSurface(void* hWind);
+		void createSurface();
 		void pickPhysicalDevice();
 
 		void createLogicalDevice();
@@ -221,11 +223,11 @@ namespace VK {
 		
 		glm::mat4 _modelToWorld;
 		double _modelScale = 1.0;
-		VkSurfaceKHR _surface;
+		VkSurfaceKHR _surface = nullptr;
 		size_t _changeNumber = 0, _lastChangeNumber = 0, _uiWindowChangeNumber = 0;
 		uint32_t _swapChainIndex;
 
-		VkInstance _instance;
+		VkInstance _instance = nullptr;
 		VkDebugUtilsMessengerEXT _debugMessenger;
 
 		DeviceContextPtr _deviceContext;
@@ -248,6 +250,15 @@ namespace VK {
 
 		bool _framebufferResized = false;
 	};
+
+	template<class APP>
+	inline VulkanAppPtr VulkanApp::create(const VkRect2D& rect, void* hWind) {
+		APP* ptr = new APP(rect, hWind);
+		VulkanAppPtr result = std::shared_ptr<APP>(ptr);
+		result->init();
+		return result;
+	}
+
 
 	inline void VulkanApp::setClearColor(float red, float green, float blue, float alpha) {
 		_clearColor = { {red, green, blue, alpha} };

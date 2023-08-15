@@ -34,11 +34,6 @@ if (UNIX)
     set(GLFW_LIB_NAME "glfw")
 else(UNIX)
 	#turn export declaration on for windows
-	add_compile_definitions(
-		VQS_EXPORT_DEF 
-		VK_PROTOTYPES 
-		NOMINMAX #This prevents min/max macros in windows.h from hiding std::min, std::max and other declarations of min/max
-	)
 
     include_directories(
 	    "include"
@@ -56,7 +51,7 @@ else(UNIX)
     )
 
     set(GLSL_VALIDATOR "/VulkanSDK/1.2.170.0/Bin32/glslangValidator.exe")
-    add_definitions(-DGLFW_EXPOSE_NATIVE_WIN32 -D_WIN32)
+    add_definitions(-DGLFW_EXPOSE_NATIVE_WIN32 -DVK_USE_PLATFORM_WIN32_KHR -D_WIN32 -DVQS_EXPORT_DEF -DVK_PROTOTYPES -DNOMINMAX)
     set(GLFW_LIB_DIR "../ThirdParty/glfw-3.3.2/lib-vc2019")
     set(FREE_TYPE_LIB_DER "../ThirdParty/freetype-2.10.2/x64/Release Static")
     set(GLFW_LIB_NAME "glfw3")
@@ -76,6 +71,7 @@ link_directories (
 
 add_library (
 VulkanQuickStartLib SHARED
+"src/tinyObjLoader.cpp"
 "vk_base/VulkanTools.cpp"
 "src/vk_app.cpp"
 "src/vk_buffer.cpp"
@@ -105,7 +101,7 @@ VulkanQuickStartLib SHARED
 "src/vk_transformFunc.cpp"
 "src/vk_ui_window.cpp"
 "src/vk_sceneNodeImageProc.cpp"
-"src/vk_main.cpp")
+"src/vk_main.cpp" "src/tinyObjLoader.cpp")
 
 target_compile_features(VulkanQuickStartLib PRIVATE cxx_std_17)
 

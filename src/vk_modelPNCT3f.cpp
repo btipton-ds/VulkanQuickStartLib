@@ -37,7 +37,6 @@ This file is part of the VulkanQuickStart Project.
 #include <glm/glm.hpp>
 #include <glm/gtx/hash.hpp>
 
-#define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
 
 #include <vk_transformFunc.h>
@@ -143,11 +142,17 @@ void ModelPNCT3f::loadModel(string path, string filename) {
 
 	unordered_map<VertexType, uint32_t> uniqueVertices = {};
 
+
+	/*
+	* TODO, this is being unfolded INCORRECTLY!! shape.mesh.indices are FACE/TRIANGLE indices
+	* The structure is compact and Vulkan is fat
+	* We need to divide by three, build three vertices and add them to the list of FAT vertices
+	*/
 	for (const auto& shape : shapes) {
 		for (const auto& index : shape.mesh.indices) {
 			VertexType vertex = {};
 
-			vertex.texId = shape.mesh.material_ids[index.vertex_index];
+//			vertex.texId = shape.mesh.material_ids[index.vertex_index];
 			vertex.pos = {
 				attrib.vertices[3 * index.vertex_index + 0],
 				attrib.vertices[3 * index.vertex_index + 1],

@@ -107,13 +107,6 @@ VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMes
 	}
 }
 
-VulkanAppPtr VulkanApp::create(const VkRect2D& rect, void* hWind) {
-	VulkanApp* ptr = new VulkanApp(rect, hWind);
-	VulkanAppPtr result = shared_ptr<VulkanApp>(ptr);
-	result->init();
-	return result;
-}
-
 VulkanApp::VulkanApp(const VkRect2D& rect, void* hWind)
 	: _frameRect(rect)
 	, _deviceContext(make_shared<DeviceContext>(MAX_FRAMES_IN_FLIGHT))
@@ -126,7 +119,8 @@ VulkanApp::VulkanApp(const VkRect2D& rect, void* hWind)
 
 void VulkanApp::init() {
 	initWindow();
-	initVulkan();
+	if (!initVulkan())
+		exit(1);
 }
 
 void VulkanApp::createPipelines() {
@@ -199,6 +193,9 @@ void VulkanApp::initWindow() {
 		_windowDpi = (unsigned int)GetDpiForWindow(hwnd);
 #endif // _WIN32
 	} else {
+#ifdef _WIN32
+		_windowDpi = (unsigned int)GetDpiForWindow((HWND) m_hWind);
+#endif // _WIN32
 		_window = nullptr;
 	}
 
@@ -212,22 +209,27 @@ void VulkanApp::framebufferResizeCallback(GLFWwindow* window, int width, int hei
 	app->_framebufferResized = true;
 }
 
-void VulkanApp::initVulkan() {
-	createInstance();
-	setupDebugMessenger();
-	createSurface(m_hWind);
-	pickPhysicalDevice();
-	createLogicalDevice();
-	createSwapChain();
-	createPipelines();
-	createImageViews();
-	createRenderPass();
-	createGraphicsPipeline();
-	createCommandPool();
-	createColorResources();
-	createDepthResources();
-	createFramebuffers();
-	createSyncObjects();
+bool VulkanApp::initVulkan() {
+	try {
+		createInstance();
+		setupDebugMessenger();
+		createSurface();
+		pickPhysicalDevice();
+		createLogicalDevice();
+		createSwapChain();
+		createPipelines();
+		createImageViews();
+		createRenderPass();
+		createGraphicsPipeline();
+		createCommandPool();
+		createColorResources();
+		createDepthResources();
+		createFramebuffers();
+		createSyncObjects();
+	} catch (runtime_error&) {
+		return false;
+	}
+	return true;
 }
 
 void VulkanApp::recreateSwapChain() {
@@ -369,10 +371,10 @@ void VulkanApp::createInstance() {
 
 	VkApplicationInfo appInfo = {};
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-	appInfo.pApplicationName = "Hello Triangle";
-	appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+	appInfo.pApplicationName = "VulkanApp";
+	appInfo.applicationVersion = VK_MAKE_VERSION(1, 3, 250);
 	appInfo.pEngineName = "No Engine";
-	appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+	appInfo.engineVersion = VK_MAKE_VERSION(1, 3, 250);
 	appInfo.apiVersion = VK_API_VERSION_1_0;
 
 	VkInstanceCreateInfo createInfo = {};
@@ -426,12 +428,12 @@ void VulkanApp::setupDebugMessenger() {
 	}
 }
 
-void VulkanApp::createSurface(void* hWind) {
-	if (hWind) {
+void VulkanApp::createSurface() {
+	if (m_hWind) {
 #ifdef _WIN32
 		VkWin32SurfaceCreateInfoKHR createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-		createInfo.hwnd = (HWND)hWind;
+		createInfo.hwnd = (HWND)m_hWind;
 		createInfo.hinstance = GetModuleHandle(nullptr);
 
 		auto result = vkCreateWin32SurfaceKHR(_instance, &createInfo, nullptr, &_surface);
@@ -449,14 +451,14 @@ void VulkanApp::createSurface(void* hWind) {
 
 void VulkanApp::pickPhysicalDevice() {
 	uint32_t deviceCount = 0;
-	vkEnumeratePhysicalDevices(_instance, &deviceCount, nullptr);
+	VkResult result = vkEnumeratePhysicalDevices(_instance, &deviceCount, nullptr);
 
 	if (deviceCount == 0) {
 		THROW("failed to find GPUs with Vulkan support!");
 	}
 
 	std::vector<VkPhysicalDevice> devices(deviceCount);
-	vkEnumeratePhysicalDevices(_instance, &deviceCount, devices.data());
+	result = vkEnumeratePhysicalDevices(_instance, &deviceCount, devices.data());
 
 	for (const auto& device : devices) {
 		VkPhysicalDeviceFeatures features = {};
@@ -1194,22 +1196,22 @@ VkExtent2D VulkanApp::getWindowExtent(const VkSurfaceCapabilitiesKHR& capabiliti
 VulkanApp::SwapChainSupportDetails VulkanApp::querySwapChainSupport(VkPhysicalDevice device) {
 	SwapChainSupportDetails details;
 
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, _surface, &details.capabilities);
+	VkResult result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, _surface, &details.capabilities);
 
 	uint32_t formatCount;
-	vkGetPhysicalDeviceSurfaceFormatsKHR(device, _surface, &formatCount, nullptr);
+	result = vkGetPhysicalDeviceSurfaceFormatsKHR(device, _surface, &formatCount, nullptr);
 
 	if (formatCount != 0) {
 		details.formats.resize(formatCount);
-		vkGetPhysicalDeviceSurfaceFormatsKHR(device, _surface, &formatCount, details.formats.data());
+		result = vkGetPhysicalDeviceSurfaceFormatsKHR(device, _surface, &formatCount, details.formats.data());
 	}
 
 	uint32_t presentModeCount;
-	vkGetPhysicalDeviceSurfacePresentModesKHR(device, _surface, &presentModeCount, nullptr);
+	result = vkGetPhysicalDeviceSurfacePresentModesKHR(device, _surface, &presentModeCount, nullptr);
 
 	if (presentModeCount != 0) {
 		details.presentModes.resize(presentModeCount);
-		vkGetPhysicalDeviceSurfacePresentModesKHR(device, _surface, &presentModeCount, details.presentModes.data());
+		result = vkGetPhysicalDeviceSurfacePresentModesKHR(device, _surface, &presentModeCount, details.presentModes.data());
 	}
 
 	return details;
@@ -1256,20 +1258,25 @@ VulkanApp::QueueFamilyIndices VulkanApp::findQueueFamilies(VkPhysicalDevice devi
 	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
 	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
+	VkResult result;
+
 	int i = 0;
 	for (const auto& queueFamily : queueFamilies) {
-		if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+		if (queueFamily.queueCount == 0)
+			continue;
+
+		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
 			indices.graphicsFamily = i;
 		}
 
 		VkBool32 presentSupport = false;
-		vkGetPhysicalDeviceSurfaceSupportKHR(device, i, _surface, &presentSupport);
+		result = vkGetPhysicalDeviceSurfaceSupportKHR(device, i, _surface, &presentSupport);
 
-		if (queueFamily.queueCount > 0 && presentSupport) {
+		if (presentSupport) {
 			indices.presentFamily = i;
 		}
 
-		if (queueFamily.queueCount > 0 && (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT) && ((queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0))
+		if (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT)
 		{
 			indices.computeFamily = i;
 		}
@@ -1295,7 +1302,8 @@ std::vector<std::string> VulkanApp::getRequiredExtensions() {
 		extensions.push_back(glfwExtensionsChar[i]);
 
 #if defined (_WIN32)
-	extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);	
+	extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+	extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
 #endif
 
 	if (enableValidationLayers) {

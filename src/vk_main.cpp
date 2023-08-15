@@ -74,29 +74,53 @@ namespace VK
 #endif
 	}
 
-	string getPath() {
-		string dir = "resources/models/";
-		for (int i = 0; i < 6; i++) {
-			if (dirExists(dir))
-				return dir;
-			dir = "../" + dir;
+	const string& getModelsPath() {
+		static std::string modelPath;
+
+		if (modelPath.empty()) {
+			string dir = "resources/models/";
+			for (int i = 0; i < 6; i++) {
+				if (dirExists(dir)) {
+					modelPath = dir;
+					return modelPath;
+				}
+				dir = "../" + dir;
+			}
+			throw runtime_error("Could not find model directory");
 		}
-		throw runtime_error("Could not find model directory");
+
+		return modelPath;
 	}
 
-	const std::string modelPath = getPath();
+	const string& getShadersPath() {
+		static std::string shadersPath;
+
+		if (shadersPath.empty()) {
+			string dir = "shaders_spv/";
+			for (int i = 0; i < 6; i++) {
+				if (dirExists(dir)) {
+					shadersPath = dir;
+					return shadersPath;
+				}
+				dir = "../" + dir;
+			}
+			throw runtime_error("Could not find model directory");
+		}
+
+		return shadersPath;
+	}
 
 #if TEST_OBJ
-	const string pottedPlantPath = modelPath + "IndoorPotPlant/";
+	const string pottedPlantPath = getModelsPath() + "IndoorPotPlant/";
 	const std::string pottedPlantFilename = "indoor_plant_02.obj";
 
-	const std::string dnaPath = modelPath + "DNA/";
+	const std::string dnaPath = getModelsPath() + "DNA/";
 	const std::string dnaFilename = "DNA.obj";
 
-	const std::string gliderPath = modelPath + "glider/";
+	const std::string gliderPath = getModelsPath() + "glider/";
 	const std::string gliderFilename = "FFGLOBJ.obj";
 
-	const std::string apricotPath = modelPath + "apricot/";
+	const std::string apricotPath = getModelsPath() + "apricot/";
 	const std::string apricotFilename = "Apricot_02_hi_poly.obj";
 
 	ModelPNCT3fPtr plant;
@@ -249,7 +273,7 @@ namespace VK
 	int readStl(const string& filename, ModelPNC3fPtr& model) {
 		TriMesh::CMeshPtr meshPtr = std::make_shared<TriMesh::CMesh>();
 		CReadSTL readStl(meshPtr);
-		if (!readStl.read(modelPath, filename))
+		if (!readStl.read(getModelsPath(), filename))
 			return 1;
 
 
@@ -282,15 +306,24 @@ namespace VK
 
 	void createPipelines() {
 
-		vector<string> sampler3DFilenames = { "shaders_spv/shader_depth_vert.spv", "shaders_spv/shader_depth_frag.spv" };
+		vector<string> sampler3DFilenames = { 
+			getShadersPath() + "shader_depth_vert.spv", 
+			getShadersPath() + "shader_depth_frag.spv" 
+		};
 		pipeline3DWSampler.add(gApp->addPipelineWithSource<PipelinePNCT3f>("obj_shader", sampler3DFilenames));
 		pipeline3DWSampler.add(offscreen->getPipelines()->addPipelineWithSource<PipelinePNCT3f>("obj_shader", offscreen->getRect(), sampler3DFilenames));
 
-		vector<string> shaded3DFilenames = { "shaders_spv/shader_vert.spv", "shaders_spv/shader_frag.spv" };
+		vector<string> shaded3DFilenames = { 
+			getShadersPath() + "shader_vert.spv", 
+			getShadersPath() + "shader_frag.spv" 
+		};
 		pipeline3DShaded.add(gApp->addPipelineWithSource<PipelinePNC3f>("stl_shaded", shaded3DFilenames));
 		pipeline3DShaded.add(offscreen->getPipelines()->addPipelineWithSource<PipelinePNC3f>("stl_shaded", offscreen->getRect(), shaded3DFilenames));
 
-		vector<string> wf3DFilenames = { "shaders_spv/shader_vert.spv", "shaders_spv/shader_wireframe_frag.spv" };
+		vector<string> wf3DFilenames = { 
+			getShadersPath() + "shader_vert.spv", 
+			getShadersPath() + "shader_wireframe_frag.spv" 
+		};
 		pipeline3DWireframe.add(gApp->addPipelineWithSource<PipelinePNC3f>("stl_wireframe", wf3DFilenames));
 		pipeline3DWireframe.add(offscreen->getPipelines()->addPipelineWithSource<PipelinePNC3f>("stl_wireframe", offscreen->getRect(), wf3DFilenames));
 
@@ -339,13 +372,9 @@ namespace VK
 		return ubo;
 	};
 	*/
-	int mainRunTest(int numArgs, char** args) {
-		VkRect2D frame;
-		frame.offset = { 0,0, };
-		frame.extent.width = 1500;
-		frame.extent.height = 900;
-		gApp = VulkanApp::create(frame);
 
+	int runBody()
+	{
 		gApp->setAntiAliasSamples(VK_SAMPLE_COUNT_4_BIT);
 		gApp->setClearColor(0.0f, 0.0f, 0.2f);
 
@@ -360,13 +389,14 @@ namespace VK
 		offscreen->init(offscreenExtent);
 		offscreenIdx = gApp->addOffscreen(offscreen);
 
-
+#if 0
 #if TEST_GUI
 		UI::WindowPtr gui = make_shared<UI::Window>(gApp);
 		gApp->setUiWindow(gui);
 		buildUi(gui);
 #else
 		UI::Window gui(gApp);
+#endif
 #endif
 
 		glfwSetWindowTitle(gApp->getWindow(), "Vulkan Quick Start");
@@ -389,6 +419,22 @@ namespace VK
 		}
 
 		return EXIT_SUCCESS;
+	}
+
+	int mainRunTest(int numArgs, char** args) {
+		VkRect2D frame;
+		frame.offset = { 0,0, };
+		frame.extent.width = 1500;
+		frame.extent.height = 900;
+		gApp = VulkanApp::create<VulkanApp>(frame);
+
+		return runBody();
+	}
+
+	int runWindow(VulkanAppPtr& pApp)
+	{
+		gApp = pApp;
+		return runBody();
 	}
 
 }
